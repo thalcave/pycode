@@ -21,7 +21,6 @@ def dfs(a, visited, order):
         if base not in visited:
             order.append(base)
             dfs(base, visited, order)
-         
 
 def attrsearch_order(a):
 
@@ -31,7 +30,6 @@ def attrsearch_order(a):
     if type(a) == types.InstanceType:
         print "a is an instance"
         print "a dict: {0}".format(a.__class__)
- 
         od.append(a.__class__)
         dfs(a.__class__, vis, od)
     else:
@@ -40,9 +38,8 @@ def attrsearch_order(a):
 
     for x in od:
         print "order : {0}".format(x)
-    
     return od
-            
+
 def test_attrsearch_order():
     # the previous example
     class B0: pass
@@ -61,7 +58,7 @@ def test_attrsearch_order():
 
 
 if __name__ == '__main__':
-    
+
     #print "dictB0: {0}".format(B0.__dict__)
     print "dictB1: {0}".format(B1.__dict__)
     #print "dictB1 name: {0}".format(B1.__name__)
