@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-import os
+
 import sys
 import stat
-
 import os
 import time
 import logging
@@ -23,7 +22,7 @@ def md5(filepah):
 
 
 def create_big_path(target):
-    """creates a big structure"""
+    """creates a big FS Tree"""
     cwd = os.getcwd()
 
     try:

@@ -4,6 +4,7 @@ import stat
 import time
 
 def random_file(path, size):
+    """Creates a file with random content"""
     bufsize = 4096
     with open(path, 'wb') as f:
         for i in range(size/bufsize):
@@ -106,30 +107,30 @@ class Data():
 
 class DataString():
     def __init__(self, name, lstage0, lstage1):
-        
+
 	list_stage0=lstage0.split(';')
 	#print list_stage0
 
         stage0_list = []
-	
+
 	for funct in list_stage0:
 	    print funct
-	    
+
 	    cstring = funct.split(' ')
-	    
+
 	    print cstring
 	    print cstring[0]
 	    current_fct = globals()[cstring[0]]
 	    current_list = [current_fct]
-	    
+
 	    for arg in cstring[1:]:
 	    	current_list.append(arg)
 	    print current_list
-	    
+
 	    stage0_list.append(current_list)
-	
+
 	print "stage0: ",stage0_list
-	
+
         self.func_stage_0 = globals()[lstage0[0]]
         self.args0 = lstage0[1:]
 

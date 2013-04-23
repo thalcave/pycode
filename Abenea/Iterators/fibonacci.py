@@ -62,21 +62,15 @@ def fibonacci_generator():
     cval = 1
 
     while 1:
-        #tmp = prev + cval
-        #prev = cval
-        #cval = tmp
         prev, cval = cval, prev+cval
         yield cval
 
 def fib():
-    """Example from PEP-0255"""
     yield 0
 
     a, b = 0, 1
     while 1:
         yield b
-        # b = a+b
-        # a = old b
         a, b = b, a+b
 
 def test_fib(func):

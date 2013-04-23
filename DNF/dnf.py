@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+""" Dutch National Flag problem:
+The flag of the Netherlands consists of three colours: red, white and blue.
+Given balls of these three colours arranged randomly in a line
+(the actual number of balls does not matter),
+the task is to arrange them such that all balls of the same colour
+are together and their collective colour groups are in the correct order.
+"""
+
 import random
 
 def sortArray(data):
@@ -39,14 +47,11 @@ def sortArray(data):
         if red_end != idx:
             print "swap Red %s,%s" % (idx,red_end)
             data[red_end], data[idx] = data[idx], data[red_end]
-        
 
         idx += 1
-        
 
         #swap element
         #data[idx], data[idx+1] = data[idx+1], data[idx]
-        
 
 def generateData():
     """generate an array of random length, containing R,W,B in random order"""
