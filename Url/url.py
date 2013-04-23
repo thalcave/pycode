@@ -37,8 +37,8 @@ def add_headers():
     req = urllib2.Request('http://www.example.com/')
     req.add_header('Referer', 'http://www.python.org/')
     req.add_header('User-agent', 'Mozilla/5.0')
-    r = urllib2.urlopen(req)
-    print_response(r)
+    resp = urllib2.urlopen(req)
+    print_response(resp)
 
 def use_opener():
     """Use OpenerDirector"""
