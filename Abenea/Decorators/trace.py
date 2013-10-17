@@ -30,7 +30,7 @@ def trace2(afunc):
 
     afunc is the function to be decorated
     """
-    @wraps(afunc)#Without the use of this decorator factory, the name of the example function would have been 'wrapper',
+    @wraps(afunc)#Without the use of this decorator factory, the name of the example function would have been 'logged_func',
     def logged_func(*args, **kw):
         """Trace this function."""
         print "enter", afunc.__name__
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     print f(999)
     print f.__name__
 
+    print "Calling trace2"
 
     f2 = trace2(msquare)
-    print f2.__name__
-
+    print f2(999)
     print f2.__name__
