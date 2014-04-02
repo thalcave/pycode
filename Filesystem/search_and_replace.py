@@ -4,13 +4,39 @@ import os, fnmatch
 import sys
 import re
 
+"""
+Search and replace strings in certain files
+* walk recursively a file system tree, skipping excluded dirs
+* filter files based on defined extensions (*.xml, *.cpp, *.java etc.), skipping excluded files as well
+* for each matching file, search for corresponding string and replace it with specific dummy string
+
+cpp files:  QnStrings::$oldstr(.*) --> QnString::$newstr()  //can be on multiple lines
+
+java files: Strings.$oldstr(.*) --> Strings.$newstr()       //can be on multiple lines
+            R.string.$oldstr --> R.string.$newstr
+
+xml files:  string/$oldstr -->string/$newstr
+
+Input:
+* file containing strings to be replaced (one on each line)
+* path to the directory containing files to be changed
+
+Output:
+* files are modified in-place
+
+"""
+
 def file_is_excluded(filename, exclude_files):
     for exclusion in exclude_files:
         if filename.startswith(exclusion):
             return True
     return False
 
-def search_replace_whole_file(filename, replacements):
+def search_replace_follow_parens(filename, replacements):
+    """Search for a string in form $string(.*);
+     - keep track of opened parens, go until the first one is closed and replace the whole string between ( and )
+     """
+
     # read file content
     with open(filename) as f:
         content = f.read()
@@ -72,7 +98,9 @@ def search_replace_whole_file(filename, replacements):
             f.write(content)
 
 
-def search_replace_file(filename, replacements):
+def search_replace_exact_match(filename, replacements):
+    """Use regex to replace exact matches"""
+
     # read file content
     with open(filename) as f:
         content = f.read()
@@ -84,14 +112,12 @@ def search_replace_file(filename, replacements):
     for current_item in replacements:
         find = current_item[0]
         replace = current_item[1]
-        if find in content:
-            # replaces all occurrences
-            #content = content.replace(find, replace)
-            #exact match
-            (content, no_subs) = re.subn(find + '\\b', replace, content)
-            if no_subs:
-                print "found in file '{0}' string '{1}' and replaced it with '{2}'".format(os.path.basename(filename), find, replace)
-                dirty = True
+
+        # replaces all occurrences, exact match
+        (content, no_subs) = re.subn(find + '\\b', replace, content)
+        if no_subs:
+            print "found in file '{0}' string '{1}' and replaced it with '{2}'".format(os.path.basename(filename), find, replace)
+            dirty = True
 
     # if dirty, write the file
     if dirty:
@@ -99,8 +125,9 @@ def search_replace_file(filename, replacements):
             f.write(content)
 
 def walk_tree(directory, replacements, excluded_files, excluded_dirs):
-    searched_extensions = replacements.keys()
+    """Walk a fs tree, skip excluded files/dirs, filter files based on extensions and apply replace functions"""
 
+    searched_extensions = replacements.keys()
     for path, dirs, files in os.walk(os.path.abspath(directory)):
         # skip excluded dirs
         for excl_dir in excluded_dirs:
@@ -118,6 +145,7 @@ def walk_tree(directory, replacements, excluded_files, excluded_dirs):
                 if filename.endswith(extension):
                     filepath = os.path.join(path, filename)
                     replacement_function = replacements[extension][0]
+                    # apply replacement function
                     replacement_function(filepath, replacements[extension][1])
                     break
 
@@ -138,20 +166,14 @@ def start_replace(replacement_strings, dirname):
         #tuples for XML files
         xml_string1 = ('string/' + oldstr, 'string/' + newstr)
         xml_string2 = ('id/' + oldstr, 'id/' + newstr)
-#        xml_string3 = ('string/' + oldstr, "\@string/" + newstr)
-
         xml_replacements.append(xml_string1)
         xml_replacements.append(xml_string2)
-#        xml_replacements.append(xml_string3)
 
     replacements = dict()
     for ext in [".cpp", ".mm", ".cc", ".c", ".hpp", ".h"]:
-        replacements[ext] = (search_replace_whole_file, cpp_replacements)
-
-    replacements[".java"] = (search_replace_whole_file, java_replacements)
-
-    replacements[".xml"] = (search_replace_file, xml_replacements)
-    print replacements
+        replacements[ext] = (search_replace_follow_parens, cpp_replacements)
+    replacements[".java"] = (search_replace_follow_parens, java_replacements)
+    replacements[".xml"] = (search_replace_exact_match, xml_replacements)
 
     excluded_files = ["moc", "Strings.java"]
     excluded_dirs = [".git", "Build"]
@@ -168,8 +190,8 @@ def start_replace(replacement_strings, dirname):
         java_replacements.append(java_string2)
 
     replacements.clear()
-    replacements[".java"] = (search_replace_file, java_replacements)
-    print replacements
+    replacements[".java"] = (search_replace_exact_match, java_replacements)
+
     walk_tree(dirname, replacements, excluded_files, excluded_dirs)
 
 def read_file(filename):
