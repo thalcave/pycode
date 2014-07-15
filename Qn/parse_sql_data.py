@@ -34,13 +34,19 @@ def get_throughput(sorted_vals):
             return (end_val - start_val)/duration
     return 0
 
-def get_metrics(filename, received_key, sent_key):
-    print "get metrics for {0},{1} from {2}".format(received_key, sent_key, filename)
+def get_metrics(filename, pair_keys_list, single_keys_list):
 
-    recv = dict()
-    sent = dict()
+    print "Processing file {0}".format(filename)
 
-    diff = dict()
+    pair_keys_dict = dict()
+    for pair in pair_keys_list:
+        pair_keys_dict[pair[0]] = dict()
+        pair_keys_dict[pair[1]] = dict()
+
+
+    single_keys_dict = dict()
+    for skey in single_keys_list:
+        single_keys_dict[skey] = list()
 
     with open(filename) as f:
         for line in f:
@@ -49,27 +55,63 @@ def get_metrics(filename, received_key, sent_key):
                 key = split_line[2]
                 date = split_line[1]
                 value = int(split_line[3].split(".")[0].translate(None, "\n\r"))
-                if key == received_key:
-                    recv[date] = value
-                    if date in sent:
-                        diff[date] = value - sent[date]
-                elif key == sent_key:
-                    sent[date] = value
-                    if date in recv:
-                        diff[date] = recv[date] - value
 
-    sorted_diff = collections.OrderedDict(sorted(diff.items()))
+                found = False
+                for skey in single_keys_list:
+                    if skey == key:
+                        single_keys_dict[key].append(value)
+                        found = True
+                        break
 
-    compute_metrics(received_key, sent_key, collections.OrderedDict(sorted(recv.items())), collections.OrderedDict(sorted(sent.items())), sorted_diff)
+                if found:
+                    # move to next line
+                    continue
 
-def compute_metrics(received_key, sent_key, sorted_recv, sorted_sent, sorted_diff):
+                for pair in pair_keys_list:
+                    if pair[0] == key or pair[1] == key:
+                        pair_keys_dict[key][date] = value
+                        break
 
-    throughput_recv = get_throughput(sorted_recv)
-    print "Throughput: {1} {0}/s".format(received_key, throughput_recv)
-    throughput_sent = get_throughput(sorted_sent)
+    compute_metrics(pair_keys_list, pair_keys_dict, single_keys_dict)
+
+#    print single_keys_dict
+#    print "-----"
+#    print pair_keys_dict
+
+def compute_metrics(pair_keys_list, pair_keys_dict, single_keys_dict):
+
+    compute_single_key_metrics(single_keys_dict)
+
+    for pair in pair_keys_list:
+        compute_pair_key_metrics(pair[0], collections.OrderedDict(sorted(pair_keys_dict[pair[0]].items())), pair[1], collections.OrderedDict(sorted(pair_keys_dict[pair[1]].items())))
+
+def compute_single_key_metrics(single_keys_dict):
+
+    for key, value in single_keys_dict.items():
+        print "{0}".format(key)
+        value.sort()
+        avg = sum(value)/len(value)
+        print "avg.: {0}".format(avg)
+        compute_percentile(avg, value, 50)
+        compute_percentile(avg, value, 75)
+        compute_percentile(avg, value, 90)
+
+    print "{0}".format("".join(["-" for x in range(1, 100)]))
+
+def compute_pair_key_metrics(recv_key, received_values, sent_key, sent_values):
+    print "{0} {1}".format(recv_key, sent_key)
+
+    throughput_recv = get_throughput(received_values)
+    print "Throughput: {1} {0}/s".format(recv_key, throughput_recv)
+    throughput_sent = get_throughput(sent_values)
     print "Throughput: {1} {0}/s".format(sent_key, throughput_sent)
 
-    diff_list = sorted_diff.values()
+    diff_list = []
+    for key_date in received_values.keys():
+        if key_date in sent_values:
+            diff_list.append(received_values[key_date] - sent_values[key_date])
+
+    diff_list.sort()
     avg_diff = sum(diff_list)/len(diff_list)
     print "avg. diff: {0}".format(avg_diff)
 
@@ -78,6 +120,7 @@ def compute_metrics(received_key, sent_key, sorted_recv, sorted_sent, sorted_dif
     compute_percentile(avg_diff, diff_list, 90)
 
     print "{0}".format("".join(["-" for x in range(1, 100)]))
+
 
 def compute_percentile(avg_diff, diff_list, percentile):
     val_percentile = np.percentile(diff_list, percentile)
@@ -95,6 +138,8 @@ if __name__ == '__main__':
     date = sys.argv[2]
 
 #    filename = get_sql_data.fetch_sql_data(server, date)
-    filename = "/tmp/file.20140714-180908.csv"
+    filename = "/tmp/file.20140715-113507.csv"
 
-    get_metrics(filename, "NoMediaMessagesReceived", "NoMediaMessagesSent")
+    pair_keys_list = [("NoMediaMessagesReceived", "NoMediaMessagesSent")]
+    single_keys_list = ['cpu']
+    get_metrics(filename, pair_keys_list, single_keys_list)
