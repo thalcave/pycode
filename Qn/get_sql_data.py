@@ -4,6 +4,7 @@
 Selects SQL data into outfile
 """
 
+import os
 import sys
 import MySQLdb as dbapi
 import sys
@@ -42,7 +43,17 @@ def fetch_sql_data(server, date):
     cur.execute(dbQuery)
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    outfile = "/tmp/file.{0}.csv".format(timestr)
+
+    outdir = "./TestResults"
+    if not os.path.exists(outdir):
+        try:
+            os.makedirs(outdir)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and os.path.isdir(outdir):
+                pass
+            else: raise
+
+    outfile = os.path.join(outdir, "file.{0}.csv".format(timestr))
 
     rows = cur.fetchall()
     fp = open(outfile, 'w')
