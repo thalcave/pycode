@@ -26,6 +26,10 @@ def get_exec_name(current_dir, latest_core):
 
     return ""
 
+def get_exec_name_from_corename(latest_core):
+    #return latest_core.split(".")[2]
+    return "qtalks"
+
 def find_exec(name, path):
     print path
     print name
@@ -43,18 +47,22 @@ def find_exec(name, path):
     return ""
 
 if __name__ == '__main__':
-    COREDIR="/home/florin.micu/cores"
-    ROOTEXEC="/home/florin.micu/Work/Qnective/florin.micu/Build/gcc46_ubuntu12_Debug"
+    COREDIR="/home/bigone/cores"
+    PWD=os.getcwd()
+    ROOTEXEC=PWD + "/Build/gcc54_ubuntu16_Debug/Qt/Tests/ClientEngineOnlineTest"
 
     lcore = get_core_name(COREDIR)
     if not lcore:
         print "No core found, will exit"
         os.exit(1)
 
-    exec_name = get_exec_name(COREDIR, lcore)
-    if exec_name:
-        full_path = find_exec(exec_name, ROOTEXEC)
-        print full_path
-        print "latest core: {0}".format(lcore)
-        if full_path:
-            subprocess.call(["gdb", full_path, lcore])
+    full_path = ROOTEXEC + "/ClientEngineOnlineTest"
+    subprocess.call(["gdb", full_path, lcore])    #exec_name = get_exec_name(COREDIR, lcore)
+
+#    exec_name = get_exec_name_from_corename(lcore)
+#    if exec_name:
+#        full_path = find_exec(exec_name, ROOTEXEC)
+#        print full_path
+#        print "latest core: {0}".format(lcore)
+#        if full_path:
+
